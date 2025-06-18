@@ -204,10 +204,10 @@ class UserHandler(
     private var user: User,
     var streamStartTime: LocalDateTime?,
 ) {
-    lateinit var messageHandler: MessageHandler
     lateinit var client: ChzzkClient
-    lateinit var listener: ChzzkUserSession
     lateinit var chatChannelId: String
+    var listener: ChzzkUserSession? = null
+    var messageHandler: MessageHandler? = null
 
     private val dispatcher: CoroutinesEventBus by inject(CoroutinesEventBus::class.java)
     private var _isActive: Boolean
@@ -233,13 +233,9 @@ class UserHandler(
 
         client.loginAsync().await()
         listener = ChzzkSessionBuilder(client).buildUserSession()
-        listener.createAndConnectAsync().await()
+        listener?.createAndConnectAsync()?.await()
 
         delay(1000L)
-
-        listener.on(SessionChatMessageEvent::class.java) {
-            messageHandler.handle(it.message, user)
-        }
 
         val timer = TimerConfigService.getConfig(user)
         if (timer?.option == TimerType.UPTIME.value)
@@ -259,15 +255,23 @@ class UserHandler(
         )
 
         messageHandler = MessageHandler(this@UserHandler)
+        listener?.on(SessionChatMessageEvent::class.java) {
+            messageHandler?.handle(it.message, user)
+        }
     }
 
     internal suspend fun disable() {
-        listener.disconnectAsync().await()
+        listener?.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
+        listener?.disconnectAsync()?.await()
+
+        listener = null
+        messageHandler = null
+
         _isActive = false
     }
 
     internal fun reloadCommand() {
-        messageHandler.reloadCommand()
+        messageHandler?.reloadCommand()
     }
 
     internal fun reloadUser(user: User) {
@@ -287,8 +291,6 @@ class UserHandler(
                 reloadUser(UserService.getUser(user.id.value)!!)
 
                 logger.info("ChzzkChat connecting... ${channel.channelName} - ${channel.channelId}")
-                listener.subscribeAsync(ChzzkSessionSubscriptionType.CHAT).join()
-
                 streamStartTime = LocalDateTime.now()
 
                 if(!_isActive) {
@@ -323,7 +325,7 @@ class UserHandler(
         } else {
             logger.info("${user.username} is offline.")
             streamStartTime = null
-            listener.disconnectAsync().join()
+            listener?.disconnectAsync()?.join()
             _isActive = false
 
             CoroutineScope(Dispatchers.Default).launch {
