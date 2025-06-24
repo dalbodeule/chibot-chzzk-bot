@@ -63,6 +63,7 @@ class MessageHandler(
             "!노래목록" to this::songListCommand,
             "!노래시작" to this::songStartCommand,
             "!카테고리" to this::categoryChangeCommand,
+            "!방제" to this::titleChangeCommand,
         )
 
         manageCommands.forEach { (commandName, command) ->
@@ -348,6 +349,25 @@ class MessageHandler(
             handler.client.modifyLiveSettings(settings)
             handler.sendChat("$category 로 수정했어요!")
         }
+    }
+
+    private fun titleChangeCommand(msg: SessionChatMessage, user: User) {
+        if (msg.profile.badges.none { it.isModerator() }) {
+            handler.sendChat("매니저만 이 명령어를 사용할 수 있습니다.")
+            return
+        }
+
+        val parts = msg.content.split(" ", limit = 2)
+        if(parts.size <= 1) {
+            handler.sendChat("입력된 방송 제목이 없습니다.")
+            return
+        }
+        val title = parts[1]
+        val settings = ChzzkLiveSettings()
+        settings.defaultLiveTitle = title
+
+        handler.client.modifyLiveSettings(settings)
+        handler.sendChat("$title 로 수정했어요!")
     }
 
     internal fun handle(msg: SessionChatMessage, user: User) {
