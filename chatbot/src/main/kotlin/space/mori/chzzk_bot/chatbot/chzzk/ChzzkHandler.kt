@@ -322,6 +322,7 @@ class UserHandler(
         } else {
             logger.info("${user.username} is offline.")
             streamStartTime = null
+            listener.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.join()
             listener.disconnectAsync()?.join()
             _isActive = false
 
