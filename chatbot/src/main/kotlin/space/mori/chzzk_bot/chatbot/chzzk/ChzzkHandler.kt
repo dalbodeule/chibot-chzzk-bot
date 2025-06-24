@@ -206,8 +206,8 @@ class UserHandler(
 ) {
     lateinit var client: ChzzkClient
     lateinit var chatChannelId: String
-    var listener: ChzzkUserSession? = null
-    var messageHandler: MessageHandler? = null
+    lateinit var listener: ChzzkUserSession
+    lateinit var messageHandler: MessageHandler
 
     private val dispatcher: CoroutinesEventBus by inject(CoroutinesEventBus::class.java)
     private var _isActive: Boolean
@@ -233,7 +233,7 @@ class UserHandler(
 
         client.loginAsync().await()
         listener = ChzzkSessionBuilder(client).buildUserSession()
-        listener?.createAndConnectAsync()?.await()
+        listener.createAndConnectAsync()?.await()
 
         delay(1000L)
 
@@ -255,23 +255,20 @@ class UserHandler(
         )
 
         messageHandler = MessageHandler(this@UserHandler)
-        listener?.on(SessionChatMessageEvent::class.java) {
-            messageHandler?.handle(it.message, user)
+        listener.on(SessionChatMessageEvent::class.java) {
+            messageHandler.handle(it.message, user)
         }
     }
 
     internal suspend fun disable() {
-        listener?.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
-        listener?.disconnectAsync()?.await()
-
-        listener = null
-        messageHandler = null
+        listener.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
+        listener.disconnectAsync()?.await()
 
         _isActive = false
     }
 
     internal fun reloadCommand() {
-        messageHandler?.reloadCommand()
+        messageHandler.reloadCommand()
     }
 
     internal fun reloadUser(user: User) {
@@ -325,7 +322,7 @@ class UserHandler(
         } else {
             logger.info("${user.username} is offline.")
             streamStartTime = null
-            listener?.disconnectAsync()?.join()
+            listener.disconnectAsync()?.join()
             _isActive = false
 
             CoroutineScope(Dispatchers.Default).launch {
