@@ -37,11 +37,13 @@ class MessageHandler(
 
     init {
         reloadCommand()
-        dispatcher.subscribe(SongEvent::class) {
-            if(it.type == SongType.STREAM_OFF) {
-                val user = UserService.getUser(channel.channelId)
-                if(! user?.let { usr -> SongListService.getSong(usr) }.isNullOrEmpty()) {
-                    SongListService.deleteUser(user)
+        CoroutineScope(Dispatchers.Default).launch {
+            dispatcher.subscribe(SongEvent::class) {
+                if(it.type == SongType.STREAM_OFF) {
+                    val user = UserService.getUser(channel.channelId)
+                    if(! user?.let { usr -> SongListService.getSong(usr) }.isNullOrEmpty()) {
+                        SongListService.deleteUser(user)
+                    }
                 }
             }
         }
@@ -87,7 +89,7 @@ class MessageHandler(
     }
 
     private fun manageAddCommand(msg: SessionChatMessage, user: User) {
-        if (msg.profile.badges.none { it.imageUrl.contains("manager") || it.imageUrl.contains("streamer") }) {
+        if (msg.profile.badges.none { it.isModerator() }) {
             handler.sendChat("매니저만 명령어를 추가할 수 있습니다.")
             return
         }
@@ -108,7 +110,7 @@ class MessageHandler(
     }
 
     private fun manageUpdateCommand(msg: SessionChatMessage, user: User) {
-        if (msg.profile.badges.none { it.imageUrl.contains("manager") || it.imageUrl.contains("streamer") }) {
+        if (msg.profile.badges.none { it.isModerator() }) {
             handler.sendChat("매니저만 명령어를 추가할 수 있습니다.")
             return
         }
@@ -130,7 +132,7 @@ class MessageHandler(
     }
 
     private fun manageRemoveCommand(msg: SessionChatMessage, user: User) {
-        if (msg.profile.badges.none { it.imageUrl.contains("manager") || it.imageUrl.contains("streamer") }) {
+        if (msg.profile.badges.none { it.isModerator() }) {
             handler.sendChat("매니저만 명령어를 삭제할 수 있습니다.")
             return
         }
@@ -147,7 +149,7 @@ class MessageHandler(
     }
 
     private fun timerCommand(msg: SessionChatMessage, user: User) {
-        if (msg.profile.badges.none { it.imageUrl.contains("manager") || it.imageUrl.contains("streamer") }) {
+        if (msg.profile.badges.none { it.isModerator() }) {
             handler.sendChat("매니저만 이 명령어를 사용할 수 있습니다.")
             return
         }
@@ -297,7 +299,7 @@ class MessageHandler(
     }
 
     private fun songStartCommand(msg: SessionChatMessage, user: User) {
-        if (msg.profile.badges.none { it.imageUrl.contains("manager") || it.imageUrl.contains("streamer") }) {
+        if (msg.profile.badges.none { it.isModerator() }) {
             handler.sendChat("매니저만 이 명령어를 사용할 수 있습니다.")
             return
         }
@@ -316,7 +318,7 @@ class MessageHandler(
     }
 
     private fun categoryChangeCommand(msg: SessionChatMessage, user: User) {
-        if (msg.profile.badges.none { it.imageUrl.contains("manager") || it.imageUrl.contains("streamer") }) {
+        if (msg.profile.badges.none { it.isModerator() }) {
             handler.sendChat("매니저만 이 명령어를 사용할 수 있습니다.")
             return
         }
@@ -430,3 +432,7 @@ class MessageHandler(
         return result
     }
 }
+
+fun SessionChatMessage.Profile.Badge.isManager() = imageUrl.contains("manager")
+fun SessionChatMessage.Profile.Badge.isStreamer() = imageUrl.contains("streamer")
+fun SessionChatMessage.Profile.Badge.isModerator() = isManager() || isStreamer()

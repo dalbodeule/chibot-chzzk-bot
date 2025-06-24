@@ -233,9 +233,17 @@ class UserHandler(
 
         client.loginAsync().await()
         listener = ChzzkSessionBuilder(client).buildUserSession()
-        listener.createAndConnectAsync()?.await()
+        listener.createAndConnectAsync().await()
+        listener.subscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
 
-        delay(1000L)
+        delay(5000L)
+
+        messageHandler = MessageHandler(this@UserHandler)
+        logger.info("${user.username} message handler init.")
+        listener.on(SessionChatMessageEvent::class.java) {
+            messageHandler.handle(it.message, user)
+        }
+        logger.info("${user.username} is connected.")
 
         val timer = TimerConfigService.getConfig(user)
         if (timer?.option == TimerType.UPTIME.value)
@@ -253,11 +261,6 @@ class UserHandler(
                 null
             )
         )
-
-        messageHandler = MessageHandler(this@UserHandler)
-        listener.on(SessionChatMessageEvent::class.java) {
-            messageHandler.handle(it.message, user)
-        }
     }
 
     internal suspend fun disable() {
