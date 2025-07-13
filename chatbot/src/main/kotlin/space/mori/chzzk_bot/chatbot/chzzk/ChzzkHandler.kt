@@ -206,7 +206,7 @@ class UserHandler(
 ) {
     lateinit var client: ChzzkClient
     lateinit var chatChannelId: String
-    lateinit var listener: ChzzkUserSession
+    var listener: ChzzkUserSession? = null
     lateinit var messageHandler: MessageHandler
 
     private val dispatcher: CoroutinesEventBus by inject(CoroutinesEventBus::class.java)
@@ -233,14 +233,12 @@ class UserHandler(
 
         client.loginAsync().await()
         listener = ChzzkSessionBuilder(client).buildUserSession()
-        listener.createAndConnectAsync().await()
-        listener.subscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
 
         delay(5000L)
 
         messageHandler = MessageHandler(this@UserHandler)
         logger.info("${user.username} message handler init.")
-        listener.on(SessionChatMessageEvent::class.java) {
+        listener?.on(SessionChatMessageEvent::class.java) {
             messageHandler.handle(it.message, user)
         }
         logger.info("${user.username} is connected.")
@@ -264,8 +262,8 @@ class UserHandler(
     }
 
     internal suspend fun disable() {
-        listener.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
-        listener.disconnectAsync()?.await()
+        listener?.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
+        listener?.disconnectAsync()?.await()
 
         _isActive = false
     }
@@ -284,8 +282,11 @@ class UserHandler(
     internal fun isActive(value: Boolean, status: ChzzkLiveDetail) {
         if(value) {
             CoroutineScope(Dispatchers.Default).launch {
-                connect()
+                if(listener == null)
+                    connect()
 
+                listener!!.createAndConnectAsync()?.await()
+                listener!!.subscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.await()
                 logger.info("${user.username} is live.")
 
                 reloadUser(UserService.getUser(user.id.value)!!)
@@ -325,8 +326,8 @@ class UserHandler(
         } else {
             logger.info("${user.username} is offline.")
             streamStartTime = null
-            listener.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.join()
-            listener.disconnectAsync()?.join()
+            listener?.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.join()
+            listener?.disconnectAsync()?.join()
             _isActive = false
 
             CoroutineScope(Dispatchers.Default).launch {
