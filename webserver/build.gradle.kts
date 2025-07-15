@@ -34,16 +34,16 @@ dependencies {
     // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-reflect
     implementation("org.jetbrains.kotlin:kotlin-reflect:2.0.21")
 
-    // https://mvnrepository.com/artifact/io.insert-koin/koin-core
-    implementation("io.insert-koin:koin-core:4.0.0")
-
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     implementation("ch.qos.logback:logback-classic:1.5.12")
 
     // https://mvnrepository.com/artifact/io.github.cdimascio/dotenv-kotlin
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.2")
 
+    implementation("io.ktor:ktor-server-metrics-micrometer:$ktorVersion")
+
     implementation(project(":common"))
+    implementation("io.ktor:ktor-server-metrics-micrometer:3.1.3")
 
     testImplementation(kotlin("test"))
 }

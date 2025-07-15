@@ -12,6 +12,7 @@ import space.mori.chzzk_bot.chatbot.discord.Discord
 import space.mori.chzzk_bot.chatbot.chzzk.Connector as ChzzkConnector
 import space.mori.chzzk_bot.common.Connector
 import space.mori.chzzk_bot.common.events.CoroutinesEventBus
+import space.mori.chzzk_bot.common.metrics.Metrics
 import space.mori.chzzk_bot.webserver.start
 import space.mori.chzzk_bot.webserver.stop
 import java.util.concurrent.TimeUnit
@@ -25,6 +26,7 @@ val logger: Logger = LoggerFactory.getLogger("main")
 fun main(args: Array<String>) {
     val dispatcher = module {
         single { CoroutinesEventBus() }
+        single { Metrics.registry }
     }
     startKoin {
         modules(dispatcher)

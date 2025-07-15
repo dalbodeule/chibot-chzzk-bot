@@ -1,6 +1,7 @@
 package space.mori.chzzk_bot.webserver.routes
 
 import io.ktor.http.*
+import io.ktor.server.request.receive
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
@@ -15,6 +16,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 import space.mori.chzzk_bot.common.events.ChzzkUserFindEvent
 import space.mori.chzzk_bot.common.events.ChzzkUserReceiveEvent
+import space.mori.chzzk_bot.webserver.routes.GuildSettings
 
 @Serializable
 data class GetUserDTO(
@@ -146,4 +148,48 @@ fun Routing.apiRoutes() {
             call.respond(HttpStatusCode.OK, returnUsers)
         }
     }
+
+    route("/settings") {
+        get {
+            val session = call.sessions.get<UserSession>()
+            if(session == null) {
+                call.respondText("No session found", status = HttpStatusCode.Unauthorized)
+                return@get
+            }
+            val user = UserService.getUser(session.id)
+            if(user == null) {
+                call.respondText("No user found", status = HttpStatusCode.NotFound)
+                return@get
+            }
+
+            call.respond(HttpStatusCode.OK, IUserSettingsDTO(
+                user.isDisabled,
+                user.isDisableStartupMsg
+            ))
+        }
+
+        post {
+            val session = call.sessions.get<UserSession>()
+            val body: IUserSettingsDTO = call.receive()
+            if(session == null) {
+                call.respondText("No session found", status = HttpStatusCode.Unauthorized)
+                return@post
+            }
+            val user = UserService.getUser(session.id)
+            if(user == null) {
+                call.respondText("No user found", status = HttpStatusCode.NotFound)
+                return@post
+            }
+
+            UserService.setIsDisabled(user, body.isBotDisabled)
+            UserService.setIsStartupDisabled(user, body.isBotMsgDisabled)
+
+            call.respond(HttpStatusCode.OK, body)
+        }
+    }
 }
+
+data class IUserSettingsDTO(
+    val isBotDisabled: Boolean,
+    val isBotMsgDisabled: Boolean
+)

@@ -37,6 +37,11 @@ dependencies {
     // https://mvnrepository.com/artifact/com.google.code.gson/gson
     implementation("com.google.code.gson:gson:2.11.0")
 
+    api("io.micrometer:micrometer-registry-prometheus:1.15.1")
+
+    // https://mvnrepository.com/artifact/io.insert-koin/koin-core
+    api("io.insert-koin:koin-core:4.0.0")
+
     testImplementation(kotlin("test"))
 }
 

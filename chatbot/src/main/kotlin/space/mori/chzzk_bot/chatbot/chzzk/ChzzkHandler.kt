@@ -9,6 +9,7 @@ import space.mori.chzzk_bot.chatbot.chzzk.Connector.getChannel
 import space.mori.chzzk_bot.chatbot.discord.Discord
 import space.mori.chzzk_bot.chatbot.utils.refreshAccessToken
 import space.mori.chzzk_bot.common.events.*
+import space.mori.chzzk_bot.common.metrics.Metrics
 import space.mori.chzzk_bot.common.models.User
 import space.mori.chzzk_bot.common.services.LiveStatusService
 import space.mori.chzzk_bot.common.services.TimerConfigService
@@ -293,6 +294,7 @@ class UserHandler(
 
                 logger.info("ChzzkChat connecting... ${channel.channelName} - ${channel.channelId}")
                 streamStartTime = LocalDateTime.now()
+                Metrics.streaming++
 
                 if(!_isActive) {
                     _isActive = true
@@ -329,6 +331,7 @@ class UserHandler(
             listener?.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.join()
             listener?.disconnectAsync()?.join()
             _isActive = false
+            Metrics.streaming--;
 
             CoroutineScope(Dispatchers.Default).launch {
                 val events = listOf(

@@ -1,0 +1,25 @@
+package space.mori.chzzk_bot.common.metrics
+
+import io.micrometer.core.instrument.Gauge
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
+import space.mori.chzzk_bot.common.services.UserService
+
+object Metrics {
+    val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+
+    var streamer =  UserService.getAllUsers().size.toDouble()
+    val streamerGauge: Gauge = Gauge.builder("streamer_gauge", this) { streamer }
+        .description("Current All Streamer Count")
+        .register(registry)
+
+    var activeStreamer = UserService.getAllUsers().filter { !it.isDisabled }.size.toDouble()
+    val activateGauge: Gauge = Gauge.builder("active_streamer_gauge", this) { streamer }
+        .description("Current Active Streamer Count")
+        .register(registry)
+
+    var streaming: Double = 0.0
+    val streamingGauge: Gauge = Gauge.builder("streaming_gauge", this) { streaming }
+        .description("Current Streaming Streamer Count")
+        .register(registry)
+}

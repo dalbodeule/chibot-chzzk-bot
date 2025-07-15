@@ -11,6 +11,7 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.engine.*
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
@@ -19,9 +20,16 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import io.ktor.server.websocket.*
+import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics
+import io.micrometer.core.instrument.binder.jvm.JvmMemoryMetrics
+import io.micrometer.core.instrument.binder.system.ProcessorMetrics
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import kotlinx.coroutines.delay
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import org.koin.core.context.startKoin
+import org.koin.dsl.module
 import org.koin.java.KoinJavaComponent.inject
 import space.mori.chzzk_bot.common.events.CoroutinesEventBus
 import space.mori.chzzk_bot.common.events.UserRegisterEvent
@@ -232,6 +240,18 @@ val server = embeddedServer(Netty, port = 8080, ) {
             }
         }
 
+        val appMicrometerRegistry: PrometheusMeterRegistry by inject(PrometheusMeterRegistry::class.java)
+
+        install(MicrometerMetrics) {
+            registry = appMicrometerRegistry
+
+            meterBinders = listOf(
+                JvmMemoryMetrics(),
+                JvmGcMetrics(),
+                ProcessorMetrics()
+            )
+        }
+
         apiRoutes()
         apiSongRoutes()
         apiCommandRoutes()
@@ -241,6 +261,8 @@ val server = embeddedServer(Netty, port = 8080, ) {
         wsTimerRoutes()
         wsSongRoutes()
         wsSongListRoutes()
+
+        metricRoutes()
 
         swaggerUI("swagger-ui/index.html", "openapi/documentation.yaml") {
             options {
