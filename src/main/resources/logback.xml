@@ -1,5 +1,5 @@
 <configuration>
-
+    <property name="lokiUrl" value="${LOKI_ENDPOINT:http://localhost:3100/loki/api/v1/push}" />
     <!-- 콘솔에 출력하는 기본 로그 설정 -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -13,7 +13,7 @@
     <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
         <labels>
             app = chibot-chzzk-bot
-            host = ${LOKI_ENDPOINT:http://localhost:3100/loki/api/v1/push}
+            host = ${lokiUrl}
         </labels>
     </appender>
 
