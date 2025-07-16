@@ -24,8 +24,10 @@ object Metrics {
         .register(registry)
 
     fun refreshStreamerMetrics() {
-        streamer = UserService.getAllUsers().size.toDouble()
-        activeStreamer = UserService.getAllUsers().filter { !it.isDisabled }.size.toDouble()
+        val streamers = UserService.getAllUsers()
+
+        streamer = streamers.size.toDouble()
+        activeStreamer = streamers.filter { !it.isDisabled }.size.toDouble()
     }
 
     fun increaseStreaming(inc: Int = 1) {
@@ -33,5 +35,9 @@ object Metrics {
     }
     fun decreaseStreaming(dec: Int = 1) {
         streaming -= dec
+    }
+
+    init {
+        refreshStreamerMetrics()
     }
 }
