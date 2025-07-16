@@ -295,7 +295,7 @@ class UserHandler(
 
                 logger.info("ChzzkChat connecting... ${channel.channelName} - ${channel.channelId}")
                 streamStartTime = LocalDateTime.now()
-                Metrics.streaming++
+                Metrics.increaseStreaming()
 
                 if(!_isActive) {
                     _isActive = true
@@ -332,7 +332,7 @@ class UserHandler(
             listener?.unsubscribeAsync(ChzzkSessionSubscriptionType.CHAT)?.join()
             listener?.disconnectAsync()?.join()
             _isActive = false
-            Metrics.streaming--;
+            Metrics.decreaseStreaming()
 
             CoroutineScope(Dispatchers.Default).launch {
                 val events = listOf(

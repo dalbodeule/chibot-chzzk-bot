@@ -8,12 +8,12 @@ import space.mori.chzzk_bot.common.services.UserService
 object Metrics {
     val registry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
 
-    var streamer =  UserService.getAllUsers().size.toDouble()
+    var streamer =  0.0
     val streamerGauge: Gauge = Gauge.builder("streamer_gauge", this) { streamer }
         .description("Current All Streamer Count")
         .register(registry)
 
-    var activeStreamer = UserService.getAllUsers().filter { !it.isDisabled }.size.toDouble()
+    var activeStreamer = 0.0
     val activateGauge: Gauge = Gauge.builder("active_streamer_gauge", this) { streamer }
         .description("Current Active Streamer Count")
         .register(registry)
@@ -22,4 +22,16 @@ object Metrics {
     val streamingGauge: Gauge = Gauge.builder("streaming_gauge", this) { streaming }
         .description("Current Streaming Streamer Count")
         .register(registry)
+
+    fun refreshStreamerMetrics() {
+        streamer = UserService.getAllUsers().size.toDouble()
+        activeStreamer = UserService.getAllUsers().filter { !it.isDisabled }.size.toDouble()
+    }
+
+    fun increaseStreaming(inc: Int = 1) {
+        streaming += inc
+    }
+    fun decreaseStreaming(dec: Int = 1) {
+        streaming -= dec
+    }
 }

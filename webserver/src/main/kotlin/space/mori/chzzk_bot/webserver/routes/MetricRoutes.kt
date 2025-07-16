@@ -26,7 +26,7 @@ fun Routing.metricRoutes() {
     val registry: PrometheusMeterRegistry by inject(PrometheusMeterRegistry::class.java)
 
     dispatcher.subscribe(UserRegisterEvent::class) {
-        Metrics.streamer++
+        Metrics.refreshStreamerMetrics()
     }
 
     get("/metrics") {

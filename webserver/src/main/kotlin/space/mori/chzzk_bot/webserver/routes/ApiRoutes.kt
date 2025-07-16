@@ -16,7 +16,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.withTimeoutOrNull
 import space.mori.chzzk_bot.common.events.ChzzkUserFindEvent
 import space.mori.chzzk_bot.common.events.ChzzkUserReceiveEvent
-import space.mori.chzzk_bot.webserver.routes.GuildSettings
+import space.mori.chzzk_bot.common.metrics.Metrics
 
 @Serializable
 data class GetUserDTO(
@@ -183,6 +183,8 @@ fun Routing.apiRoutes() {
 
             UserService.setIsDisabled(user, body.isBotDisabled)
             UserService.setIsStartupDisabled(user, body.isBotMsgDisabled)
+
+            Metrics.refreshStreamerMetrics()
 
             call.respond(HttpStatusCode.OK, body)
         }
