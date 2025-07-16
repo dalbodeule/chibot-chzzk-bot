@@ -14,7 +14,7 @@ object Metrics {
         .register(registry)
 
     var activeStreamer = 0.0
-    val activateGauge: Gauge = Gauge.builder("active_streamer_gauge", this) { streamer }
+    val activateGauge: Gauge = Gauge.builder("active_streamer_gauge", this) { activeStreamer }
         .description("Current Active Streamer Count")
         .register(registry)
 
