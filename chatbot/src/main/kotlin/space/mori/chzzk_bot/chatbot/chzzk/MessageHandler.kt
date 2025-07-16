@@ -31,6 +31,7 @@ class MessageHandler(
 
     private val channel = handler.channel
     private val logger = handler.logger
+    private val chatLogger = handler.chatLogger
     private val listener = handler.listener
 
     private val dispatcher: CoroutinesEventBus by inject(CoroutinesEventBus::class.java)
@@ -372,7 +373,7 @@ class MessageHandler(
 
     internal fun handle(msg: SessionChatMessage, user: User) {
         if(msg.senderChannelId == ChzzkHandler.botUid) return
-
+        chatLogger.info("[RECV]${channel.channelName}: ${msg.content}{${msg.content.length} / 100}")
         val commandKey = msg.content.split(' ')[0]
         commands[commandKey.lowercase()]?.let { it(msg, user) }
     }

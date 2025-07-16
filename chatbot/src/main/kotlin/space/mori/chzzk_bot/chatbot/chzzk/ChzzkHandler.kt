@@ -204,6 +204,7 @@ class UserHandler(
     val logger: Logger,
     private var user: User,
     var streamStartTime: LocalDateTime?,
+    val chatLogger: Logger = LoggerFactory.getLogger("${channel.channelName}-chat"),
 ) {
     lateinit var client: ChzzkClient
     lateinit var chatChannelId: String
@@ -370,6 +371,7 @@ class UserHandler(
         GlobalScope.launch {
             delay(100L)
             client.sendChatToLoggedInChannel(msg.limitUtf8Length(100))
+            chatLogger.info("[SEND]${channel.channelName}: ${msg.limitUtf8Length(100)}{${msg.length} / 100}")
         }
     }
 }
