@@ -28,6 +28,7 @@ import java.lang.Thread
 import java.net.SocketTimeoutException
 import java.nio.charset.Charset
 import java.time.LocalDateTime
+import java.util.concurrent.ConcurrentHashMap
 
 object ChzzkHandler {
     private val handlers = mutableListOf<UserHandler>()
@@ -35,6 +36,9 @@ object ChzzkHandler {
     lateinit var botUid: String
     @Volatile private var running: Boolean = false
     private val dispatcher: CoroutinesEventBus by inject(CoroutinesEventBus::class.java)
+
+    private val lastRunMap = ConcurrentHashMap<String, Long>()
+    private val requiredWait = 210_000L
 
     fun addUser(chzzkChannel: ChzzkChannel, user: User) {
         handlers.add(UserHandler(chzzkChannel, logger, user, streamStartTime = LocalDateTime.now()))
@@ -128,6 +132,7 @@ object ChzzkHandler {
                     } catch (e: Exception) {
                         logger.info("Thread 1 Exception: ${it.channel.channelName} / ${e.stackTraceToString()}")
                     } finally {
+                        lastRunMap[it.channel.channelId] = System.currentTimeMillis()
                         Thread.sleep(5000)
                     }
                 }
@@ -137,11 +142,20 @@ object ChzzkHandler {
 
         val threadRunner2 = Runnable {
             logger.info("Thread 2 started!")
-            logger.info("Thread 2 started!")
             while (running) {
                 handlers.forEach {
                     if (!running) return@forEach
                     try {
+                        val now = System.currentTimeMillis()
+                        val lastRun = lastRunMap[it.channel.channelId] ?: 0L
+                        val waitedTime = now - lastRun
+
+                        if(waitedTime < requiredWait) {
+                            val sleepTime = requiredWait - waitedTime
+                            logger.info("Thread 2 Sleep: ${it.channel.channelName} / ${sleepTime}ms")
+                            Thread.sleep(sleepTime)
+                        }
+
                         val streamInfo = Connector.getLive(it.channel.channelId)
                         if (streamInfo?.isOnline == true && !it.isActive) {
                             try {
