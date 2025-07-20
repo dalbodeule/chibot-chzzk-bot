@@ -38,7 +38,7 @@ object ChzzkHandler {
     private val dispatcher: CoroutinesEventBus by inject(CoroutinesEventBus::class.java)
 
     private val lastRunMap = ConcurrentHashMap<String, Long>()
-    private val requiredWait = 210_000L
+    private val requiredWait = 300_000L
 
     fun addUser(chzzkChannel: ChzzkChannel, user: User) {
         handlers.add(UserHandler(chzzkChannel, logger, user, streamStartTime = LocalDateTime.now()))
